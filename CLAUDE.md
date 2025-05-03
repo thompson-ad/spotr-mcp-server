@@ -1,56 +1,120 @@
-# MCP Technical Notes
+# SpotrFitnessServer - AI Guidance
 
-## MCP Architecture
+## Project Overview
+
+SpotrFitnessServer is an MCP server that enables Claude to act as a fitness programming assistant through the Spotr platform.
+
+## Key Concepts
+
+- This is a **Model Context Protocol (MCP)** server implementation
+- It uses Claude as the "brain" to generate fitness content
+- The server provides Claude with data access and storage capabilities
+
+## Server Structure
 
 ### Core Components
 
-- **Host**: Program accessing MCP servers (Claude Desktop, etc.)
-  - Uses an LLM to analyze available tools
-  - Can run multiple clients, each connecting to a different server
-- **Client**: Maintains relationship with a single MCP server
-  - Each client connects to one server when the host starts
-- **Server**: Executes tools called by the host
-  - Can run locally or on remote machines
-  - Can be implemented in any language (independent from host)
-- **Transport**: Communication layer between client and server
-  - **stdio**: Standard IO (terminal) for local servers
-  - **HTTP/SSE**: Server-sent events for remote servers
+- **Resources**: Data that Claude can access (profiles, program templates)
+- **Tools**: Functions Claude can call (store programs, update programs)
+- **Prompts**: Templates to guide Claude's responses
 
-### Protocol Details
+## Common Commands
 
-The MCP protocol uses JSON-RPC 2.0 for message passing:
+```bash
+# Start the server
+node server.js
 
-```json
-// Request format
-{
-  "jsonrpc": "2.0",
-  "id": "unique-id",
-  "method": "method-name",
-  "params": { /* method parameters */ }
-}
+# Run with specific environment variables
+API_BASE_URL=https://api.example.com API_KEY=your-key node server.js
 
-// Response format
-{
-  "jsonrpc": "2.0",
-  "id": "unique-id",
-  "result": { /* result data */ },
-  // or
-  "error": {
-    "code": 123,
-    "message": "Error description",
-    "data": { /* optional error details */ }
-  }
-}
+# Install dependencies
+npm install
 ```
 
-## Implementation Guidelines
+## Key Files
 
-### Proper Logging with StdioServerTransport
+- `server.js`: Main entry point with MCP server setup
+- `.env`: Environment variables (API endpoints, keys)
+- `resources/`: MCP resources for data access
+- `tools/`: MCP tools for database operations
+- `prompts/`: MCP prompts for guiding responses
 
-- **stdout (`console.log`)**: Reserved for MCP protocol messages only
-  - Using console.log will corrupt the protocol communication
-- **stderr (`console.error`)**: Safe for internal logging
-  - Use for debugging and technical details
+## Code Patterns
+
+### Resource Pattern
+
+```javascript
+server.resource(
+  "resource-name",
+  "uri-pattern://{param}/resource",
+  async (uri, { param }) => {
+    // Fetch and return data
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          text: JSON.stringify(data),
+          mimeType: "application/json",
+        },
+      ],
+    };
+  }
+);
+```
+
+### Tool Pattern
+
+```javascript
+server.tool(
+  "tool-name",
+  {
+    param1: z.string().describe("Parameter description"),
+    param2: z.number().describe("Another parameter description"),
+  },
+  async (params) => {
+    // Execute operation with params
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result),
+        },
+      ],
+    };
+  }
+);
+```
+
+### Prompt Pattern
+
+```javascript
+server.prompt(
+  "prompt-name",
+  {
+    param1: z.string().describe("Parameter description"),
+    param2: z.string().describe("Another parameter description"),
+  },
+  (params) => {
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Template with ${params.param1} and ${params.param2}`,
+          },
+        },
+      ],
+    };
+  }
+);
+```
+
+## Important Implementation Notes
+
+1. **Logging**: Never use `console.log()` with StdioServerTransport; use `console.error()` instead
+2. **Error Handling**: Always wrap API calls in try/catch blocks
+3. **Response Format**: Follow the standard content format for each tool type
 
 ### Tool Design Best Practices
 
@@ -63,12 +127,6 @@ From "Building Effective Agents" by Anthropic:
 5. **Use clear parameter names**: Write docstrings as if for junior developers
 6. **Test extensively**: Identify and fix common model mistakes
 7. **Poka-yoke your tools**: Design to prevent errors (e.g., using absolute paths)
-
-## Design Philosophy: Claude as the Brain
-
-- **Claude**: Handles intelligence, creativity, and personalization
-- **MCP Server**: Manages data shuttling, storage, and retrieval
-- **Web App**: Provides presentation, user management, and sharing
 
 ## An Example Communication
 

@@ -1,23 +1,22 @@
 {
   "name": "spotr-mcp-server",
+  "author": "Aaron Thompson",
+  "description": "Spotr Local MCP Server",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "index.js",
   "bin": {
-    "spotr": "./build/index.js"
+    "spotr": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\""
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\""
   },
   "files": [
-    "build"
+    "dist"
   ],
-  "author": "Aaron Thompson",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.1.1",
-    "airtable": "^0.12.2",
     "axios": "^1.8.2",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"

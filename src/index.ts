@@ -1,23 +1,17 @@
+#!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import server from "./server.js";
 import { log } from "./utils.js";
-import { registerAllResources } from "./resources/index.js";
 import { registerAllTools } from "./tools/index.js";
 
 async function main() {
   try {
     log("Starting Spotr MCP Server");
 
-    registerAllResources();
     registerAllTools();
 
     const transport = new StdioServerTransport();
     await server.connect(transport);
-
-    // server.server.sendLoggingMessage({
-    //   level: "info",
-    //   data: "Spotr Exercise Library server started successfully",
-    // });
 
     log("Spotr MCP Server running on stdio transport");
   } catch (error) {
