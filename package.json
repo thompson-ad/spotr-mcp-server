@@ -3,7 +3,7 @@
   "author": "Aaron Thompson",
   "description": "Spotr Local MCP Server",
   "type": "module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "index.js",
   "bin": {
     "spotr": "dist/index.js"
