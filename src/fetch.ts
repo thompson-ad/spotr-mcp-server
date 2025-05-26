@@ -33,7 +33,10 @@ export async function fetchJSON<T = any>(
   return (await resp.json()) as T;
 }
 
-export async function postJSON(path: string, body: unknown) {
+export async function postJSON<T = any>(
+  path: string,
+  body: unknown
+): Promise<T> {
   const url = buildUrl(path);
   const resp = await fetch(url, {
     method: "POST",
@@ -46,5 +49,35 @@ export async function postJSON(path: string, body: unknown) {
   if (!resp.ok) {
     throw new Error(`Fetch error [${resp.status}] ${resp.statusText}`);
   }
-  return await resp.json();
+  return (await resp.json()) as T;
+}
+
+export async function deleteJSON(path: string) {
+  const url = buildUrl(path);
+  const resp = await fetch(url, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!resp.ok) {
+    throw new Error(`Fetch error [${resp.status}] ${resp.statusText}`);
+  }
+}
+
+export async function putJSON<T = any>(
+  path: string,
+  body: unknown
+): Promise<T> {
+  const url = buildUrl(path);
+  const resp = await fetch(url, {
+    method: "PUT",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    throw new Error(`Fetch error [${resp.status}] ${resp.statusText}`);
+  }
+  return (await resp.json()) as T;
 }

@@ -6,7 +6,11 @@ export function registerMovementTools() {
   server.tool(
     "fetch-all-movements",
     `Fetch the entire movement library and corresponding demo videos.
-    Useful to get a complete picture of all the movements you have at your disposal to design a program or if you are designing programs for full-body training splits where every major muscle group is trained in each session.`,
+    Useful to get a complete picture of all the movements you have at your disposal to design a program.
+    You must carefully consider the entire library before creating programs. 
+    In some cases, the lirary is extensive and the user will want to see a level of consideration and creativity in your suggestions.
+    Note that you are not necessarily limited to the movements you receive from this tool but they should be preferred.
+    This tool is likely to be the first tool you use in a new interaction with the user.`,
     async () => {
       try {
         const allMovements = await fetchAllMovements();
