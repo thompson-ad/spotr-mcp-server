@@ -1,5 +1,5 @@
-import { deleteJSON, fetchJSON, postJSON, putJSON } from "./fetch.js";
 import { z } from "zod";
+import { deleteJSON, fetchJSON, postJSON, putJSON } from "./fetch.js";
 
 type MuscleGroup = "Chest" | "Back" | "Shoulders" | "Arms" | "Legs" | "Core";
 

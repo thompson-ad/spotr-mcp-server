@@ -5,6 +5,7 @@ const server = new McpServer({
   version: "1.0.0",
   capabilities: {
     resources: {},
+    tools: {},
     logging: {},
   },
 });
