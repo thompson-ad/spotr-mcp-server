@@ -1,40 +1,58 @@
-import { z } from "zod";
-import {
-  fetchAllPrograms,
-  createProgram,
-  createProgramSchema,
-  updateProgram,
-  updateProgramSchema,
-  fetchProgram,
-  deleteProgram,
-} from "../api.js";
-import server from "../server.js";
-import { log } from "../utils.js";
+import z from "zod";
+import { createText, log } from "./utils.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { createProgramSchema, updateProgramSchema, type createApiClient } from "./api.js";
 
-export function registerProgramTools() {
+export function registerAllTools(
+  server: McpServer,
+  api: ReturnType<typeof createApiClient>
+) {
+  server.tool(
+    "fetch-all-movements",
+    `Fetch the entire movement library and corresponding demo videos.
+    Useful to get a complete picture of all the movements you have at your disposal to design a program.
+    You must carefully consider the entire library before creating programs. 
+    In some cases, the lirary is extensive and the user will want to see a level of consideration and creativity in your suggestions.
+    Note that you are not necessarily limited to the movements you receive from this tool but they should be preferred.
+    This tool is likely to be the first tool you use in a new interaction with the user.`,
+    async () => {
+      try {
+        const allMovements = await api.fetchAllMovements();
+        return {
+          content: [
+            createText(`Fetched all movements! Review them all carefully.`),
+            createText(allMovements)
+          ],
+        };
+      } catch (error) {
+        log(`Error in fetching all movements: ${error}`, "error");
+        return {
+          content: [
+            createText(`Error fetching all movements: ${error}`)
+          ],
+        };
+      }
+    }
+  );
+
   server.tool(
     "fetch-all-programs",
     `Fetch all the programs you have created.
     Useful to get a complete picture of all the programs you have created.`,
     async () => {
       try {
-        const allPrograms = await fetchAllPrograms();
+        const allPrograms = await api.fetchAllPrograms();
         return {
           content: [
-            {
-              type: "text",
-              text: JSON.stringify(allPrograms, null, 2),
-            },
+            createText(`Fetched all programs!`),
+            createText(allPrograms)
           ],
         };
       } catch (error) {
-        log(`Error in fetching all records: ${error}`, "error");
+        log(`Error in fetching all programs: ${error}`, "error");
         return {
           content: [
-            {
-              type: "text",
-              text: `Error fetching all records: ${error}`,
-            },
+            createText(`Error fetching all records: ${error}`)
           ],
         };
       }
@@ -177,23 +195,18 @@ export function registerProgramTools() {
     { program: createProgramSchema },
     async ({ program }) => {
       try {
-        const newProgram = await createProgram(program);
+        const newProgram = await api.createProgram(program);
         return {
           content: [
-            {
-              type: "text",
-              text: JSON.stringify(newProgram, null, 2),
-            },
+             createText(`Created the new program!`),
+             createText(newProgram)
           ],
         };
       } catch (error) {
         log(`Error creating program: ${error}`, "error");
         return {
           content: [
-            {
-              type: "text",
-              text: `Error creating program: ${error}`,
-            },
+            createText(`Error creating program: ${error}`)
           ],
         };
       }
@@ -262,23 +275,18 @@ export function registerProgramTools() {
     { programId: z.string(), update: updateProgramSchema },
     async ({ programId, update }) => {
       try {
-        const newProgram = await updateProgram(programId, update);
+        const newProgram = await api.updateProgram(programId, update);
         return {
           content: [
-            {
-              type: "text",
-              text: JSON.stringify(newProgram, null, 2),
-            },
+            createText(`Successfully updated program`),
+            createText(newProgram)
           ],
         };
       } catch (error) {
         log(`Error updating program: ${error}`, "error");
         return {
           content: [
-            {
-              type: "text",
-              text: `Error updating program: ${error}`,
-            },
+            createText(`Error updating program: ${error}`)
           ],
         };
       }
@@ -293,23 +301,18 @@ export function registerProgramTools() {
     { programId: z.string() },
     async ({ programId }) => {
       try {
-        const program = await fetchProgram(programId);
+        const program = await api.fetchProgram(programId);
         return {
           content: [
-            {
-              type: "text",
-              text: JSON.stringify(program, null, 2),
-            },
+            createText(`Fetched program!`),
+            createText(program)
           ],
         };
       } catch (error) {
         log(`Error fetching program: ${error}`, "error");
         return {
           content: [
-            {
-              type: "text",
-              text: `Error fetching program: ${error}`,
-            },
+            createText(`Error fetching program: ${error}`)
           ],
         };
       }
@@ -327,23 +330,17 @@ export function registerProgramTools() {
     { programId: z.string() },
     async ({ programId }) => {
       try {
-        await deleteProgram(programId);
+        await api.deleteProgram(programId);
         return {
           content: [
-            {
-              type: "text",
-              text: "program deleted",
-            },
+            createText(`Successfully deleted program`)
           ],
         };
       } catch (error) {
         log(`Error deleting program: ${error}`, "error");
         return {
           content: [
-            {
-              type: "text",
-              text: `Error deleting program: ${error}`,
-            },
+            createText(`Error deleting program: ${error}`)
           ],
         };
       }

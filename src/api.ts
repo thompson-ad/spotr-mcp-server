@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { deleteJSON, fetchJSON, postJSON, putJSON } from "./fetch.js";
+import type { createFetchClient } from "./fetch.js";
 
 type MuscleGroup = "Chest" | "Back" | "Shoulders" | "Arms" | "Legs" | "Core";
 
@@ -17,13 +17,6 @@ interface MovementsResponse {
   };
 }
 
-// fetch all movements
-// Todo, how do we handle thrown errors in MCP?
-export const fetchAllMovements = async () => {
-  const data = await fetchJSON<MovementsResponse>("/api/v1/movements");
-  return data.movements;
-};
-
 interface FetchAllProgramsResponse {
   programs: {
     id: string;
@@ -33,11 +26,6 @@ interface FetchAllProgramsResponse {
     updated_at: string;
   }[];
 }
-
-export const fetchAllPrograms = async () => {
-  const data = await fetchJSON<FetchAllProgramsResponse>("/api/v1/programs");
-  return data.programs;
-};
 
 interface ProgramExercise {
   id: string;
@@ -90,10 +78,6 @@ interface ProgramResponse {
   };
 }
 
-export const fetchProgram = async (id: string) => {
-  const data = await fetchJSON<ProgramResponse>(`/api/v1/programs/${id}`);
-  return data.program;
-};
 
 interface CreateProgramExercise {
   order_index: number;
@@ -170,14 +154,6 @@ export const createProgramSchema = z
   })
   .describe("The users program - broken down into days, blocks and exercises");
 
-export const createProgram = async (program: CreateProgramRequest) => {
-  const data = await postJSON<ProgramResponse>("/api/v1/programs", program);
-  return data.program;
-};
-
-export const deleteProgram = async (id: string) => {
-  await deleteJSON(`/api/v1/programs/${id}`);
-};
 
 interface UpdateProgramExercise {
   order_index: number;
@@ -253,13 +229,45 @@ export const updateProgramSchema = z
   })
   .describe("The users program - broken down into days, blocks and exercises");
 
-export const updateProgram = async (
-  id: string,
-  program: UpdateProgramRequest
-) => {
-  const data = await putJSON<ProgramResponse>(
-    `/api/v1/programs/${id}`,
-    program
-  );
-  return data.program;
-};
+export function createApiClient(fetchClient: ReturnType<typeof createFetchClient>) {
+  async function fetchAllMovements() {
+    const data = await fetchClient.fetchJSON<MovementsResponse>("/api/v1/movements");
+    return data.movements;
+  }
+
+  async function fetchAllPrograms() {
+    const data = await fetchClient.fetchJSON<FetchAllProgramsResponse>("/api/v1/programs");
+    return data.programs;
+  }
+
+  async function fetchProgram(id: string) {
+    const data = await fetchClient.fetchJSON<ProgramResponse>(`/api/v1/programs/${id}`);
+    return data.program;
+  }
+
+  async function createProgram(program: CreateProgramRequest) {
+    const data = await fetchClient.postJSON<ProgramResponse>("/api/v1/programs", program);
+    return data.program;
+  }
+
+  async function deleteProgram(id: string) {
+    await fetchClient.deleteJSON(`/api/v1/programs/${id}`);
+  }
+
+  async function updateProgram(id: string, program: UpdateProgramRequest) {
+    const data = await fetchClient.putJSON<ProgramResponse>(
+      `/api/v1/programs/${id}`,
+      program
+    );
+    return data.program;
+  }
+
+  return {
+    fetchAllMovements,
+    fetchAllPrograms,
+    fetchProgram,
+    createProgram,
+    deleteProgram,
+    updateProgram,
+  };
+}
