@@ -1,11 +1,15 @@
 import z from "zod";
 import { createText, log } from "./utils.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { type createApiClient } from "./api.js";
 import {
   createProgramSchema,
+  fetchAllMovementsSchema,
+  fetchAllProgramsSchema,
   updateProgramSchema,
-  type createApiClient,
-} from "./api.js";
+  programResponseSchema,
+  deleteProgramResponseSchema,
+} from "./schema.js";
 
 type ToolAnnotations = {
   // defaults to true, so only allow false
@@ -39,6 +43,7 @@ export function registerAllTools(
         openWorldHint: false,
         readOnlyHint: true,
       } satisfies ToolAnnotations,
+      outputSchema: fetchAllMovementsSchema.shape,
     },
     async () => {
       try {
@@ -48,6 +53,7 @@ export function registerAllTools(
             createText(`Fetched all movements! Review them all carefully.`),
             createText(allMovements),
           ],
+          structuredContent: allMovements,
         };
       } catch (error) {
         log(`Error in fetching all movements: ${error}`, "error");
@@ -68,6 +74,7 @@ export function registerAllTools(
         openWorldHint: false,
         readOnlyHint: true,
       } satisfies ToolAnnotations,
+      outputSchema: fetchAllProgramsSchema.shape,
     },
     async () => {
       try {
@@ -77,6 +84,7 @@ export function registerAllTools(
             createText(`Fetched all programs!`),
             createText(allPrograms),
           ],
+          structuredContent: allPrograms,
         };
       } catch (error) {
         log(`Error in fetching all programs: ${error}`, "error");
@@ -227,6 +235,7 @@ export function registerAllTools(
         destructiveHint: false,
       } satisfies ToolAnnotations,
       inputSchema: { program: createProgramSchema },
+      outputSchema: programResponseSchema.shape,
     },
     async ({ program }) => {
       try {
@@ -236,6 +245,7 @@ export function registerAllTools(
             createText(`Created the new program!`),
             createText(newProgram),
           ],
+          structuredContent: newProgram,
         };
       } catch (error) {
         log(`Error creating program: ${error}`, "error");
@@ -312,6 +322,7 @@ export function registerAllTools(
         openWorldHint: false,
         destructiveHint: false,
       } satisfies ToolAnnotations,
+      outputSchema: programResponseSchema.shape,
     },
     async ({ programId, update }) => {
       try {
@@ -321,6 +332,7 @@ export function registerAllTools(
             createText(`Successfully updated program`),
             createText(newProgram),
           ],
+          structuredContent: newProgram,
         };
       } catch (error) {
         log(`Error updating program: ${error}`, "error");
@@ -343,12 +355,14 @@ export function registerAllTools(
         openWorldHint: false,
         readOnlyHint: true,
       } satisfies ToolAnnotations,
+      outputSchema: programResponseSchema.shape,
     },
     async ({ programId }) => {
       try {
         const program = await api.fetchProgram(programId);
         return {
           content: [createText(`Fetched program!`), createText(program)],
+          structuredContent: program,
         };
       } catch (error) {
         log(`Error fetching program: ${error}`, "error");
@@ -371,12 +385,18 @@ export function registerAllTools(
      If you do not already have it, you can get a list of all the programs you have made for this user along with their IDs using the fetch-all-programs tool.`,
       inputSchema: { programId: z.string() },
       annotations: { openWorldHint: false, destructiveHint: true },
+      outputSchema: deleteProgramResponseSchema.shape,
     },
     async ({ programId }) => {
       try {
         await api.deleteProgram(programId);
+        const response = {
+          success: true,
+          message: "Program successfully deleted",
+        };
         return {
           content: [createText(`Successfully deleted program`)],
+          structuredContent: response,
         };
       } catch (error) {
         log(`Error deleting program: ${error}`, "error");
